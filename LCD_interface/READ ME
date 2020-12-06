@@ -4,7 +4,7 @@
 
 - Code will create a considerably interactable user interface on an LCD by using a rotary encoder.
 
-- Pins are defaulted at specific values(values can be found in the header file). (NOTE: fix this eventually)
+- Pins are defaulted at specific values(values can be found in the header file, and until a fix comes around, they can be directly changed). (NOTE: fix this eventually)
 
 - An array is passed into the interface() method, and all strings are centered and automatically used to conveniently create a list to be navigated with the rotary encoder.
 

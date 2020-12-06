@@ -1,8 +1,10 @@
-- This library ultilizes the LiquidCrysyal library.
+- This library ultilizes other libraries such as the LiquidCrysyal library.
+
+- Programmed for 12C 16x2 LCD! (Most likely works with others, but this was programmed with 16x2 in mind)
 
 - Code will create a considerably interactable user interface on an LCD by using a rotary encoder.
 
-- Pins are defaulted at specific values. (NOTE: fix this eventually)
+- Pins are defaulted at specific values(values can be found in the header file). (NOTE: fix this eventually)
 
 - An array is passed into the interface() method, and all strings are centered and automatically used to conveniently create a list to be navigated with the rotary encoder.
 

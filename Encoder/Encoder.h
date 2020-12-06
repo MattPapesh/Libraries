@@ -7,7 +7,7 @@ class ENCODER
 {
   private:
 
-  int analogValueA, analogValueB, encoderVal, prevButtonPressed;
+  int valueA, valueB, encoderVal, prevButtonPressed;
 
   bool execute, buttonPressed;
 
@@ -15,7 +15,7 @@ class ENCODER
 
   int pinA,  pinB, digitalPin;
 
-  ENCODER(int analogPinA, int analogPinB, int tempDigitalPin);
+  ENCODER(int tempPinA, int tempPinB, int tempDigitalPin);
 
   int encoderValue();
 

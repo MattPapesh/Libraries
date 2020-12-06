@@ -1,7 +1,7 @@
 #include <Encoder.h>
 #include <LiquidCrystal.h>
 #include <String.h>
-#include <LCD_AndRotaryEncoder_UI.h>
+#include <LCD_interface.h>
 #include "Arduino.h"
  
           LCD_INTERFACE::LCD_INTERFACE()

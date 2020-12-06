@@ -1,42 +1,42 @@
 #include "Arduino.h"
 #include "Encoder.h"
 
-    ENCODER::ENCODER(int analogPinA, int analogPinB, int tempDigitalPin)
+    ENCODER::ENCODER(int tempPinA, int tempPinB, int tempDigitalPin)
   {
-    pinA = analogPinA;
-    pinB = analogPinB;
+    pinA = tempPinA;
+    pinB = tempPinB;
     digitalPin = tempDigitalPin;
 
     pinMode(pinA, INPUT);
     pinMode(pinB, INPUT);
     pinMode(digitalPin, INPUT_PULLUP);
 
-    analogValueA = analogRead(pinA);
-    analogValueB = analogRead(pinB);
+    valueA = analogRead(pinA);
+    valueB = analogRead(pinB);
 
     encoderVal = 0;
   }
 
     int ENCODER::encoderValue()
   {
-    analogValueA = analogRead(pinA);
-    analogValueB = analogRead(pinB);
+    valueA = analogRead(pinA);
+    valueB = analogRead(pinB);
 
-    if (analogValueA == 0 && analogValueB != 0 && execute)
+    if (valueA == 0 && valueB != 0 && execute)
     {
       encoderVal--;
       //Counter clockwise *DOWN*
 
       execute = false;
     }
-    else if (analogValueB == 0 && analogValueA != 0 && execute)
+    else if (valueB == 0 && valueA != 0 && execute)
     {
       encoderVal++;
        //Clockwise *UP*
 
       execute = false;
     }
-    else if (analogValueA != 0 && analogValueB != 0 && !execute)
+    else if (valueA != 0 && valueB != 0 && !execute)
     {
       execute = true;
     }

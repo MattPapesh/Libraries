@@ -1,1 +1,11 @@
-This library ultilizes the LiquidCrysyal library.
+- This library ultilizes the LiquidCrysyal library.
+
+- Code will create a considerably interactable user interface on an LCD by using a rotary encoder.
+
+- Pins are defaulted at specific values. (NOTE: fix this eventually)
+
+- An array is passed into the interface() method, and all strings are centered and automatically used to conveniently create a list to be navigated with the rotary encoder.
+
+- Changing the array used (passed into interface() ), or by using other objects will allow for different lists to have menus and sub menus. (NOTE: finish implementing this)
+
+- Note: Allow encoder to be used with an interrupt service routine. 

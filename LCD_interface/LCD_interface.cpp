@@ -19,13 +19,13 @@
             amountOfFolderObjPTRs = nullptr; 
           }
 
-          void LCD_INTERFACE::currentFolder(String tempListOfFolders[], int tempSize, folder* tempCurrentFolderOpen)
+          void LCD_INTERFACE::currentFolder(char* tempListOfFolders[], short int tempSize, folder* tempCurrentFolderOpen)
           {
                delete[] listOfFoldersPTR; 
 
                tempSize = tempSize + 1;
 
-               listOfFoldersPTR = new String[tempSize];
+               listOfFoldersPTR = new char*[tempSize];
 
             for (int i = 1; i < tempSize; i++)
             {
@@ -45,7 +45,6 @@
                 *(listOfFoldersPTR) = BACK;
             }
 
-            
           }
 
         void LCD_INTERFACE::begin(folder* tempMenuPTR)
@@ -83,21 +82,23 @@
             return updateInterface;    
         }
 
-        int LCD_INTERFACE::printOptionHorizontalLocation(String tempFolder)
+        short int LCD_INTERFACE::printOptionHorizontalLocation(char* tempFolder)
         {
-            int tempHorizontalCursurPos;
+            String tempFolderSTR = tempFolder;
+
+            short int tempHorizontalCursurPos;
              // finds the horizontal position of the cursur to center the printed text
     
-            tempHorizontalCursurPos = (9 - (tempFolder.length() /2) ); // equation centers option text
+            tempHorizontalCursurPos = (9 - (tempFolderSTR.length() /2) ); // equation centers option text
 
             return tempHorizontalCursurPos;
         }
 
-        void LCD_INTERFACE::printFolders(bool bottomRow, String listOfFolders[])
+        void LCD_INTERFACE::printFolders(bool bottomRow, char* listOfFolders[])
         { 
              if (interfaceBlockade() )
              {
-                  int primaryOption, peripheralOption; 
+                  short int primaryOption, peripheralOption; 
 
                   if (!bottomRow)
                   {
@@ -160,7 +161,7 @@
 
         void LCD_INTERFACE::interface()// runs the current menu (displays current parent folder)
         { 
-            String listOfFolders[*sizeOfListOfFoldersPTR];
+            char* listOfFolders[*sizeOfListOfFoldersPTR];
 
             for (int i = 0; i < *sizeOfListOfFoldersPTR; i++)
             {
@@ -179,6 +180,8 @@
             printArrow();
             
             printFolders(row, listOfFolders);
+            
+            delay(25);
         }
 
         void LCD_INTERFACE::updateFolders(folder* tempMainFolderPTR, folder* tempNewFolderPTR)
@@ -187,7 +190,7 @@
           
            if (PTR_ofListOfFolderObjPTRs != nullptr)
             {
-                 for (int i = 0; i < *amountOfFolderObjPTRs; i++)
+                 for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
                 {
                     *(tempPTR_ofListOfFolderObjPTRs + i) = *(PTR_ofListOfFolderObjPTRs + i);
                 }
@@ -199,7 +202,7 @@
 
            PTR_ofListOfFolderObjPTRs = new folder*[*amountOfFolderObjPTRs]; 
 
-           for (int i = 0; i < *amountOfFolderObjPTRs - 1; i++)
+           for (short int i = 0; i < *amountOfFolderObjPTRs - 1; i++)
            {
                *(PTR_ofListOfFolderObjPTRs + i) = *(tempPTR_ofListOfFolderObjPTRs + i);
            }
@@ -213,7 +216,7 @@
         {
             if (openFolder)
             { 
-                for (int i = 0; i < *amountOfFolderObjPTRs; i++)
+                for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
                 {
                     if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName == currentFolderSelected)
                     { 
@@ -225,7 +228,7 @@
             }
             else if (!openFolder)
             {
-                for (int i = 0; i < *amountOfFolderObjPTRs; i++)
+                for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
                 {
                     if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName ==  currentFolderOpen->parentFolder)
                     {
@@ -265,9 +268,9 @@
 
             updateFolders(nullptr, tempChildFolderPTR);
             
-            String tempListOfFolders[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)];// creates clone of parent folder's options on the stack
+            char* tempListOfFolders[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)];// creates clone of parent folder's options on the stack
 
-            for (int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
+            for (short int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
             {
                 tempListOfFolders[i] = *(tempParentFolderPTR->listOfFoldersPTR + i);//makes clone identical to parent folder's list of options
             }
@@ -276,10 +279,10 @@
             
             delete[] tempParentFolderPTR->listOfFoldersPTR;  // original parent folder's options are deleted (array deleted) // issue
 
-            tempParentFolderPTR->listOfFoldersPTR = new String[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)]; // new list of options
+            tempParentFolderPTR->listOfFoldersPTR = new char*[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)]; // new list of options
             //is made for the parent folder based on the new size
 
-            for (int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
+            for (short int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
             {
                 if(foldersBeforeFunctions)
                 {
@@ -320,7 +323,7 @@
             sizeOfListOfFoldersPTR = nullptr; 
         }
 
-        void folder::createFolder(String tempListOfFolders[], int tempSizeOfListOfFolders)
+        void folder::createFolder(char* tempListOfFolders[], short int tempSizeOfListOfFolders)
         {
             if (listOfFoldersPTR != nullptr)
             {
@@ -334,12 +337,12 @@
             // Sense memory is constantly allocated on the heap, anything already
             //allocated needs to be freed before more memory is allocated. 
 
-            listOfFoldersPTR = new String[tempSizeOfListOfFolders];
-            sizeOfListOfFoldersPTR = new int; // pointers allocate memory inside of the method in case the std::string array's size changes.
+            listOfFoldersPTR = new char*[tempSizeOfListOfFolders];
+            sizeOfListOfFoldersPTR = new short int; // pointers allocate memory inside of the method in case the std::char* array's size changes.
 
             *sizeOfListOfFoldersPTR = tempSizeOfListOfFolders;
             
-            for (int i = 0; i < tempSizeOfListOfFolders; i++)
+            for (short int i = 0; i < tempSizeOfListOfFolders; i++)
             {
                 *(listOfFoldersPTR + i) = tempListOfFolders[i];
             }

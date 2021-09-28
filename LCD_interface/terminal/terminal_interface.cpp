@@ -181,224 +181,13 @@
           }
 
         void begin(folder* tempMenuPTR)
-        {
+        { 
             currentFolderOpen = tempMenuPTR;
-            tempMenuPTR->mainFolder = true; 
+            tempMenuPTR->mainFolder = true;
             *PTR_ofListOfFolderObjPTRs = tempMenuPTR; 
-            
+             
            currentFolder(tempMenuPTR->listOfFFsPTR, tempMenuPTR->sizeOfListOfFFs, tempMenuPTR );      
-        }
-
-        bool interfaceBlockade()
-        {
-            bool updateInterface;
-
-            if (dialVal < 0)
-            {
-                updateInterface = false;
-                //dial.encoderVal = 0;
-            }
-            else if (dialVal == sizeOfListOfFFs)
-            {
-                updateInterface = false;
-                //dial.encoderVal = sizeOfListOfFFs - 1; 
-            }
-            else
-            {
-                updateInterface = true; 
-            }
-
-            return updateInterface;    
-        }
-
-        short int printOptionHorizontalLocation(char* tempFolder)
-        {
-            //String tempFolderSTR = tempFolder;
-            short int tempHorizontalCursurPos;
-             // finds the horizontal position of the cursur to center the printed text
-    
-            //tempHorizontalCursurPos = (9 - (tempFolderSTR.length() /2) ); // equation centers option text
-
-            return 0;//tempHorizontalCursurPos;
-        }
-
-        void printFolders(bool bottomRow, char* listOfFolders[])
-        { 
-             if (interfaceBlockade() )
-             {
-                  short int primaryOption, peripheralOption; 
-
-                  if (!bottomRow)
-                  {
-                      if (dialVal == 0)
-                      {
-                          peripheralOption = 0;
-                      }
-                      else
-                      {
-                          peripheralOption = dialVal - 1; 
-                      }
-                
-                      primaryOption = dialVal;
-                  }
-                  else if (bottomRow)
-                  {
-                     peripheralOption = dialVal + 1;
-                     primaryOption = dialVal;
-                  }
-
-                  //display.setCursor(printOptionHorizontalLocation(listOfFolders[primaryOption] ), bottomRow); 
-                  //display.print(listOfFolders[primaryOption]); 
-                  //display.setCursor(printOptionHorizontalLocation(listOfFolders[peripheralOption]), (!bottomRow) );
-    
-                 if (primaryOption != peripheralOption)
-                 {
-                    //display.print(listOfFolders[peripheralOption]);
-                 }
-            }
-        }
-
-        void printArrow()
-        {
-            prevRow = row;
-
-            if (dialVal > prevDialVal)
-            {
-                  row = 0; //top row
-            }
-            else if (prevDialVal > dialVal)
-            {
-                 row = 1;  // bottom row
-            }
-    
-            if (dialVal != prevDialVal)
-            {
-                //display.clear();
-                //display.setCursor(0, prevRow);
-                //display.print(removeArrow);
-                //display.setCursor(0, row);
-                //display.print(arrow);
-            }
-        }
-
-        void primaryInterface()
-        {
-            arrow = primaryArrow;
-         
-            char* listOfFolders[sizeOfListOfFFs];
-
-            for (int i = 0; i < sizeOfListOfFFs; i++)
-            {
-                listOfFolders[i] = *(listOfFFsPTR + sizeOfListOfFFs - i - 1);
-            }
-
-             currentFFSelected = listOfFolders[dialVal];
-
-            if (enableInterface && !buttonPressed)
-            {
-                enableInterface = false;
-
-                //display.setCursor(0, row);
-                //display.print(arrow);
-            }
-
-            if (!enableInterface)
-            {
-                openFolder(); 
-                printArrow();
-                printFolders(row, listOfFolders);
-            }   
-        }
-
-        void secondaryInterface() 
-        {
-            arrow = secondaryArrow;
-            dialVal = 0; 
-
-            if (buttonPressed || navInterface)
-            {
-                //display.clear(); 
-                
-            }
-
-           for (int i = 0; i < amountOfFolderObjPTRs; i++)
-           {
-               //Serial.print("FolderObj: "); Serial.println((*(PTR_ofListOfFolderObjPTRs + i))->folderName);
-
-                for (int iter = 0; iter < (*(PTR_ofListOfFolderObjPTRs+i))->sizeOfListOfFiles; iter++)
-                {
-                    //Serial.print("FileObj: "); 
-                    //Serial.println(((*(PTR_ofListOfFolderObjPTRs+i))->listOfFilesPTR + iter)->fileName);
-
-                    for (int I = 0; I < ((*(PTR_ofListOfFolderObjPTRs+i))->listOfFilesPTR + iter)->numOfParams; I++)
-                    {
-                        //Serial.print("Param: "); 
-                        //Serial.print((((*(PTR_ofListOfFolderObjPTRs + i))->listOfFilesPTR + iter)->paramsPTR + I)->paramName); Serial.print(" = "); 
-                        //Serial.println((((*(PTR_ofListOfFolderObjPTRs+i))->listOfFilesPTR+iter)->paramsPTR + I)->parameter);
-                    } 
-                } //Serial.println("");  
-           }
-        }   
-
-        void interface()// runs the current menu (displays current parent folder)
-        { 
-            getButtonStatus(&buttonPressed, &buttonPressedTwice, buttonDelayInMillis);
-
-            prevDialVal = dialVal;
-            //dialVal = dial.encoderValue();
-
-            if (buttonPressedTwice)
-            {
-                switchInterface = (!switchInterface);
-                enableInterface = true;
-                //display.clear();  
-            }
-            if (!switchInterface)
-            {
-                navInterface = true;
-                primaryInterface();
-            }
-            else
-            {   
-                secondaryInterface(); 
-                navInterface = false;
-            }
-        }
-
-        void getButtonStatus(bool* pressedOnce, bool* pressedTwice, int delayInMillis)
-        {
-            *pressedOnce = false;
-            *pressedTwice = false;
-            //*pressedOnce = dial.buttonPress();
-            
-            if (*pressedOnce)
-            {
-                for (int i = 0; i < delayInMillis; i++)
-                {
-                    //delay(1);
-
-                    if (false/*!dial.buttonPress()*/ )
-                    {
-                        for(int I = 0; I < delayInMillis; I++)
-                        {   
-                            //delay(1);
-
-                            //if(dial.buttonPress() )
-                            {
-                                *pressedTwice = true;
-                                *pressedOnce = false;
-
-                                //delay(delayInMillis);
-
-                                break;
-                            }
-                        }
-
-                        break;
-                    }
-                }
-            }
-        }
+        }  
 
         void updateFolders(folder* tempMainFolderPTR, folder* tempNewFolderPTR)
         {
@@ -424,51 +213,6 @@
 
            delete[]  tempPTR_ofListOfFolderObjPTRs;
            *(PTR_ofListOfFolderObjPTRs + amountOfFolderObjPTRs - 1) = tempNewFolderPTR; 
-        }
-
-        void updateDisplay(bool openFolder)
-        {
-            if (openFolder)
-            { 
-                for (short int i = 0; i < amountOfFolderObjPTRs; i++)
-                {
-                    if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName == currentFFSelected)
-                    { 
-                        currentFolderOpen =  *(PTR_ofListOfFolderObjPTRs + i) ;
-                        currentFolder(currentFolderOpen->listOfFFsPTR, currentFolderOpen->sizeOfListOfFFs, currentFolderOpen);
-                    }
-                }
-            }
-            else if (!openFolder)
-            {
-                for (short int i = 0; i < amountOfFolderObjPTRs; i++)
-                {
-                    if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName ==  currentFolderOpen->parentFolder)
-                    {
-                        currentFolderOpen = *(PTR_ofListOfFolderObjPTRs + i);
-                        currentFolder(currentFolderOpen->listOfFFsPTR, currentFolderOpen->sizeOfListOfFFs, currentFolderOpen);
-                    }
-                }
-            }
-        }
-
-        void openFolder()
-        {
-            bool enter;
-
-            if (buttonPressed)
-            {   
-                  if (currentFFSelected == BACK)
-                  {  
-                     enter = false;
-                  }
-                  else
-                  {
-                     enter = true; 
-                  }
-                
-                updateDisplay(enter);
-            }  
         }
 /*
         int getParam(char* fileName, char* paramName)
@@ -498,16 +242,6 @@
 
             return 0; 
         }*/
-
-        bool getButtonPressed()
-        {
-            return buttonPressed; 
-        }
-
-        int getDialValue()
-        {
-            return dialVal;
-        }
 
         void includeFolder(folder* tempParentFolderPTR, folder* tempChildFolderPTR, bool tempFoldersBeforeFunctions)
         {
@@ -569,14 +303,15 @@
     folder folder_1 = folder("myFirstFolder", files_1, no_files_1);
 
     void setup()
-    {
+    { 
+        
         interface.begin(&folder_1);
     }
 
     void print()
     {
         for(int i = 0; i < interface.amountOfFolderObjPTRs; i++)
-        {
+        {   
             folder current_folder = *(*(interface.PTR_ofListOfFolderObjPTRs) + i);
 
             printf("folder name:  %s", current_folder.folderName);

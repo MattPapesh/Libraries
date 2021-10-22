@@ -1,4 +1,4 @@
-#include <String.h>
+
 #include <iostream>
 #include <conio.h>
 
@@ -68,7 +68,7 @@
                     filesToDelete++; 
                 }
                 
-            }/*
+            }
 
             if (filesToDelete < tempSizeOfListOfFiles)
             {
@@ -84,12 +84,7 @@
 
                     *(listOfFilesPTR + i) = tempListOfFiles[i + tempListOffset]; 
                 } 
-            }
-
-            Serial.print("Folder: "); Serial.println(folderName); 
-            for (int i = 0; i < sizeOfListOfFiles; i++){Serial.print("FileObj: "); Serial.println((listOfFilesPTR + i)->fileName);
-            for (int I = 0; I < (listOfFilesPTR + i)->numOfParams; I++){Serial.print("Param: "); Serial.print(((listOfFilesPTR+i)->paramsPTR + I)->paramName); Serial.print(" = "); Serial.println(((listOfFilesPTR+i)->paramsPTR + I)->param);} }
-            Serial.println("");  */    
+            }   
         }
 
         ~folder()
@@ -183,7 +178,7 @@
         void begin(folder* tempMenuPTR)
         { 
             currentFolderOpen = tempMenuPTR;
-            tempMenuPTR->mainFolder = true;
+            PTR_ofListOfFolderObjPTRs = new folder*[3];
             *PTR_ofListOfFolderObjPTRs = tempMenuPTR; 
              
            currentFolder(tempMenuPTR->listOfFFsPTR, tempMenuPTR->sizeOfListOfFFs, tempMenuPTR );      
@@ -246,20 +241,16 @@
         void includeFolder(folder* tempParentFolderPTR, folder* tempChildFolderPTR, bool tempFoldersBeforeFunctions)
         {
             foldersBeforeFunctions = tempFoldersBeforeFunctions; 
-
             updateFolders(nullptr, tempChildFolderPTR);
-            
-            char* tempListOfFolders[(tempParentFolderPTR->sizeOfListOfFFs)];// creates clone of parent folder's options on the stack
+            char* tempListOfFFs[(tempParentFolderPTR->sizeOfListOfFFs)] = {};// creates clone of parent folder's options on the stack
 
             for (int i = 0; i < (tempParentFolderPTR->sizeOfListOfFFs); i++)
             {
-                tempListOfFolders[i] = *(tempParentFolderPTR->listOfFFsPTR + i);//makes clone identical to parent folder's list of options
+                tempListOfFFs[i] = *(tempParentFolderPTR->listOfFFsPTR + i);//makes clone identical to parent folder's list of options
             }
 
-            tempParentFolderPTR->sizeOfListOfFFs = tempParentFolderPTR->sizeOfListOfFFs + 1; // size of list increments by 1
-            
+            tempParentFolderPTR->sizeOfListOfFFs++; // size of list increments by 1
             delete[] tempParentFolderPTR->listOfFFsPTR;  // original parent folder's options are deleted (array deleted)
-
             tempParentFolderPTR->listOfFFsPTR = new char*[tempParentFolderPTR->sizeOfListOfFFs]; // new list of options
             //is made for the parent folder based on the new size
 
@@ -273,14 +264,14 @@
                      }
                      else if(i < tempParentFolderPTR->sizeOfListOfFFs)
                      {
-                            *(tempParentFolderPTR->listOfFFsPTR + i) = tempListOfFolders[i-1];
+                            *(tempParentFolderPTR->listOfFFsPTR + i) = tempListOfFFs[i-1];
                      }
                 }
                 else if(!foldersBeforeFunctions)
                 {
                     if (i <= tempParentFolderPTR->sizeOfListOfFFs - 2)
                     {
-                        *(tempParentFolderPTR->listOfFFsPTR + i) = tempListOfFolders[i]; // original list is copied to the new list, leaving
+                        *(tempParentFolderPTR->listOfFFsPTR + i) = tempListOfFFs[i]; // original list is copied to the new list, leaving
                          //the new index empty.
                     }
                     else if (i == tempParentFolderPTR->sizeOfListOfFFs - 1)
@@ -292,29 +283,84 @@
             }
             
              tempChildFolderPTR->parentFolder = tempParentFolderPTR->folderName; // the parent folder name of the child folder is named after the parent
-           // we are not interested in the parent's parent, or the child's child, but strictly the relationship between the current child and the current parent. 
+             // we are not interested in the parent's parent, or the child's child, but strictly the relationship between the current child and the current parent. 
         }
     };
 
     LCD_INTERFACE interface = LCD_INTERFACE();
 
+    const int no_params = 3; 
+    param p[no_params] = {param("p1",0), param("p2",1), param("p3",2)};
+
     const int no_files_1 = 3; 
-    file files_1[no_files_1] = {file("file_1", nullptr, 0), file("file_2", nullptr, 0), file("file_3", nullptr, 0)};
+    file files_1[no_files_1] = {file("file_1", p, 0), file("file_2", p, 0), file("file_3", p, 0)};
     folder folder_1 = folder("myFirstFolder", files_1, no_files_1);
+    folder folder_2 = folder("mySecondFolder", files_1, no_files_1);
 
     void setup()
     { 
-        
+        interface.includeFolder(&folder_1, &folder_2, false); 
         interface.begin(&folder_1);
     }
-
+    
     void print()
     {
+        folder current_folder = folder("", NULL, 0); 
+        folder folders[9] = {current_folder, current_folder, current_folder, current_folder, current_folder, current_folder, current_folder, current_folder, current_folder};
+
         for(int i = 0; i < interface.amountOfFolderObjPTRs; i++)
         {   
-            folder current_folder = *(*(interface.PTR_ofListOfFolderObjPTRs) + i);
+            folders[i] = *((*interface.PTR_ofListOfFolderObjPTRs) + i);
+        }
 
-            printf("folder name:  %s", current_folder.folderName);
+        for(int i = 0; i < interface.amountOfFolderObjPTRs; i++)
+        {
+            const int num_of_files = current_folder.sizeOfListOfFiles;
+            file files[num_of_files];
+
+            current_folder = folders[i]; 
+            printf("folder name:  %s \n", current_folder.folderName);
+            printf("child folders: "); 
+
+            for(int ii = 0; ii < num_of_folders; ii++)
+            {
+                if(ii != 0)
+                {
+                    printf(", "); 
+                }
+
+                if(folders[ii].parentFolder == current_folder.folderName)
+                {
+                    printf("%s", folders[ii].folderName);
+                }
+            }
+            printf("files: %i", num_of_files);
+            printf("\nfiles & parameters below: \n\n"); 
+
+            for(int ii = 0; ii < num_of_files; ii++)
+            {   
+                files[ii] = *(current_folder.listOfFilesPTR + ii);
+            }
+
+            for(int ii = 0; ii < num_of_files; ii++)
+            {
+                file current_file = files[ii];
+                printf("file #%i: %s -> parameters: ", ii, current_file.fileName);
+
+                for(int iii = 0; iii < current_file.numOfParams; iii++)
+                {
+                    if(iii != 0)
+                    {
+                        printf(", ");
+                    }
+
+                    printf("%s", *(current_file.paramsPTR + iii));
+                }
+
+                printf("\n");
+            }
+            
+            printf("\n\n");
         }
     }
 

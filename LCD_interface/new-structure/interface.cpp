@@ -77,9 +77,10 @@
 
         char* folder_name = "";
         char* parent_folder_name = ""; 
-        file* file_ptrs = nullptr;
+        folder* parent_folder_ptr = nullptr;
+        file** file_ptr_ptrs = nullptr;
         int num_of_file_ptrs = 0;
-        folder* folder_ptrs = nullptr;
+        folder** folder_ptr_ptrs = nullptr;
         int num_of_folder_ptrs = 0;
 
         public:
@@ -90,48 +91,44 @@
 
         ~folder()
         {
-            delete[] file_ptrs, folder_ptrs;
-            file_ptrs = nullptr, folder_ptrs = nullptr;
+            delete[] *file_ptr_ptrs, file_ptr_ptrs, *folder_ptr_ptrs, folder_ptr_ptrs;
+            file_ptr_ptrs = nullptr, folder_ptr_ptrs = nullptr;
         }
 
-        void addFolders(folder folders[], int num_of_folders)
+        void addFolder(folder* folder_ptr)
         {
-            folder* new_folder_ptrs = new folder[num_of_folder_ptrs + num_of_folders];
+            folder** new_folder_ptr_ptrs = new folder*[num_of_folder_ptrs + 1];
 
             for(int i = 0; i < num_of_folder_ptrs; i++)
             {
-                *(new_folder_ptrs + i) = *(folder_ptrs + i);
-                (new_folder_ptrs + i)->setParentFolderName(folder_name); 
+                *(new_folder_ptr_ptrs + i) = *(folder_ptr_ptrs + i);
+                (*(new_folder_ptr_ptrs + i))->setParentFolderName(folder_name); 
+                (*(new_folder_ptr_ptrs + i))->setParentFolderPTR(this);
             }
+            std::cout<<"HELP";
+            *(new_folder_ptr_ptrs + num_of_folder_ptrs + 1) = folder_ptr;
+            (*(new_folder_ptr_ptrs + num_of_folder_ptrs + 1))->setParentFolderName(folder_name);
+            (*(new_folder_ptr_ptrs + num_of_folder_ptrs + 1))->setParentFolderPTR(this);
 
-            for(int i = 0; i < num_of_folders; i++)
-            {
-                *(new_folder_ptrs + num_of_folder_ptrs + i) = folders[i];
-                (new_folder_ptrs + num_of_folder_ptrs + i)->setParentFolderName(folder_name);
-            }
-
-            delete[] folder_ptrs;
-            folder_ptrs = new_folder_ptrs;
-            num_of_folder_ptrs = num_of_folder_ptrs + num_of_folders; 
+           // delete[] folder_ptr_ptrs;
+            folder_ptr_ptrs = new_folder_ptr_ptrs;
+            num_of_folder_ptrs++; 
         }
 
-        void addFiles(file files[], int num_of_files)
+        void addFile(file* file_ptr)
         {
-            file* new_file_ptrs = new file[num_of_file_ptrs + num_of_files];
+            file** new_file_ptr_ptrs = new file*[num_of_file_ptrs + 1];
 
             for(int i = 0; i < num_of_file_ptrs; i++)
             {
-                *(new_file_ptrs + i) = *(file_ptrs + i);
+                *(new_file_ptr_ptrs + i) = *(file_ptr_ptrs + i);
             }
+   
+            *(new_file_ptr_ptrs + num_of_file_ptrs + 1) = file_ptr;            
 
-            for(int i = 0; i < num_of_files; i++)
-            {   
-                *(new_file_ptrs + num_of_file_ptrs + i) = files[i];
-            }
-
-            delete[] file_ptrs;
-            file_ptrs = new_file_ptrs;
-            num_of_file_ptrs = num_of_file_ptrs + num_of_files;
+            delete[] file_ptr_ptrs;
+            file_ptr_ptrs = new_file_ptr_ptrs;
+            num_of_file_ptrs++;
         }
 
         char** getContentNamePTRs()// returns a dynamically allocated array of char*s that represent the names of files and child folders inside of a folder
@@ -140,12 +137,12 @@
 
             for(int i = 0; i < num_of_file_ptrs; i++)
             {
-                *(content_name_ptrs + i) = (file_ptrs + i)->getFileName();
+                *(content_name_ptrs + i) = (*(file_ptr_ptrs + i))->getFileName();
             }
 
             for(int i = 0; i < num_of_folder_ptrs; i++)
             {
-                *(content_name_ptrs + num_of_file_ptrs + i) = (folder_ptrs + i)->getFolderName();
+                *(content_name_ptrs + num_of_file_ptrs + i) = (*(folder_ptr_ptrs + i))->getFolderName();
             }
 
             return content_name_ptrs; 
@@ -154,6 +151,11 @@
         void setParentFolderName(char* parent_folder_name)
         {
             this->parent_folder_name = parent_folder_name; 
+        }
+
+        void setParentFolderPTR(folder* parent_folder_ptr)
+        {
+            this->parent_folder_ptr = parent_folder_ptr; 
         }
 
         char* getFolderName()
@@ -166,13 +168,18 @@
             return parent_folder_name; 
         }
 
+        folder* getParentFolderPTR()
+        {
+            return parent_folder_ptr;
+        }
+
         file getFile(char* file_name)
         {
             for(int i = 0; i < num_of_file_ptrs; i++)
             {
-                if((file_ptrs + i)->getFileName() == file_name)
+                if((*(file_ptr_ptrs + i))->getFileName() == file_name)
                 {
-                    return *(file_ptrs + i);
+                    return *(*(file_ptr_ptrs + i));
                 }
             }
         }
@@ -182,9 +189,9 @@
             return num_of_file_ptrs;
         }
 
-        folder* getFolderPTRs()
+        folder** getFolderPTR_PTRs()
         {
-            return folder_ptrs;
+            return folder_ptr_ptrs;
         }
 
         int getNumOfFolders()
@@ -197,17 +204,98 @@
     {
         private:
 
+        folder* base_folder_ptr = nullptr;
+        folder current_folder_open = NULL;
+        char* current_content_selected = "";
+
+        void incrementNumOfLevelPTRs(int** lvl_ptrs_ptr, int* num_of_lvl_ptrs_ptr)
+        {
+            *num_of_lvl_ptrs_ptr++;
+            int* new_lvl_ptrs = new int[*num_of_lvl_ptrs_ptr];
+
+            for(int i = 0; i < *num_of_lvl_ptrs_ptr - 1; i++)
+            {
+                *(new_lvl_ptrs + i) = *(*lvl_ptrs_ptr + i);
+            }
+
+            delete[] *lvl_ptrs_ptr; 
+            *lvl_ptrs_ptr = new_lvl_ptrs;
+        }
+        
+        folder getFolder(char* folder_name)
+        {
+            int num_of_lvl_indexes = 20;
+            int current_lvl = 0;
+            int* lvl_index_ptrs = new int[num_of_lvl_indexes]; 
+            folder* current_folder_ptr = base_folder_ptr;
+
+            for(int i = 0; i < num_of_lvl_indexes; i++){*(lvl_index_ptrs + i) = 0;}
+
+            while(current_folder_ptr->getFolderName() != folder_name)
+            {   
+                if((*(current_folder_ptr->getFolderPTR_PTRs() + *(lvl_index_ptrs + current_lvl + 1))) != NULL)
+                {   
+                    current_folder_ptr = *(current_folder_ptr->getFolderPTR_PTRs() + *(lvl_index_ptrs + current_lvl + 1));
+                    current_lvl++;
+
+                    //if(current_lvl + 1 < num_of_lvl_indexes)
+                    {
+                      //  incrementNumOfLevelPTRs(&lvl_index_ptrs, &num_of_lvl_indexes);
+                    }
+                }
+                else
+                {  
+                    if(*(lvl_index_ptrs + current_lvl) < current_folder_ptr->getParentFolderPTR()->getNumOfFolders())
+                    {
+                        (*(lvl_index_ptrs + current_lvl))++;
+                        current_folder_ptr = current_folder_ptr->getParentFolderPTR();
+                        current_lvl = current_lvl - 1; 
+                    }
+                    else
+                    {
+                        *(lvl_index_ptrs + current_lvl) = 0;
+                        current_folder_ptr = current_folder_ptr->getParentFolderPTR()->getParentFolderPTR();
+                        current_lvl = current_lvl - 2;
+                    }
+                }
+                
+                std::cout<<current_folder_ptr->getFolderName()<<std::endl;
+                _sleep(1000);
+            }
+            std::cout<<"done!";
+            delete[] lvl_index_ptrs; 
+            return folder();//*current_folder_ptr;
+        }
+
         public:
 
-        LCD_Interface()
+        LCD_Interface(folder* base_folder_ptr)
         {
-
+            this->base_folder_ptr = base_folder_ptr; 
+            folder bad = getFolder("[] child3");
         }
     };
 
-int main()
-{
-    printf("Hello world!");
+    folder base = folder("myFolder");
+    folder children[3] = {folder("[] child1"), folder("[] child2"), folder("[] child3")};
+    folder grand_children1[2] = {folder("[] grandchild1"), folder("[] grandchild2")};
+    folder grand_children2[2] = {folder("[] grandchildA"), folder("[] grandchildB")};
+    file files[2] = {file("file1"), file("file2")};
+    //LCD_Interface interface = LCD_Interface();
 
-    return 0;
-}
+    int main()
+    {
+        children[0].addFolder(&grand_children1[0]);
+        children[0].addFolder(&grand_children1[1]);
+        children[1].addFolder(&grand_children2[0]);
+        children[1].addFolder(&grand_children2[1]);
+        base.addFolder(&children[0]);
+        base.addFolder(&children[1]); 
+        base.addFolder(&children[2]);  
+        base.addFile(&files[0]);
+        base.addFile(&files[1]);
+std::cout << "o=jjhihihiio \n \n";
+        LCD_Interface i = LCD_Interface(&base);
+        
+        return 0;
+    }

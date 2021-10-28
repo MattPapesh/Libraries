@@ -80,7 +80,7 @@
         folder* parent_folder_ptr = nullptr;
         file* file_ptrs = nullptr;
         int num_of_file_ptrs = 0;
-        folder* folder_ptrs = nullptr;
+        folder** folder_ptr_ptrs = nullptr;
         int num_of_folder_ptrs = 0;
 
         public:
@@ -91,30 +91,30 @@
 
         ~folder()
         {
-            delete[] file_ptrs, folder_ptrs;
-            file_ptrs = nullptr, folder_ptrs = nullptr;
+            delete[] file_ptrs, folder_ptr_ptrs;
+            file_ptrs = nullptr, folder_ptr_ptrs = nullptr;
         }
 
-        void addFolders(folder folders[], int num_of_folders)
+        void addFolders(folder* folders[], int num_of_folders)
         {
-            folder* new_folder_ptrs = new folder[num_of_folder_ptrs + num_of_folders];
+            folder** new_folder_ptr_ptrs = new folder*[num_of_folder_ptrs + num_of_folders];
 
             for(int i = 0; i < num_of_folder_ptrs; i++)
             {
-                *(new_folder_ptrs + i) = *(folder_ptrs + i);
-                (new_folder_ptrs + i)->setParentFolderName(folder_name); 
-                (new_folder_ptrs + i)->setParentFolderPTR(this);
+                *(new_folder_ptr_ptrs + i) = *(folder_ptr_ptrs + i);
+                (*(new_folder_ptr_ptrs + i))->setParentFolderName(folder_name); 
+                (*(new_folder_ptr_ptrs + i))->setParentFolderPTR(this);
             }
 
             for(int i = 0; i < num_of_folders; i++)
             {
-                *(new_folder_ptrs + num_of_folder_ptrs + i) = folders[i];
-                (new_folder_ptrs + num_of_folder_ptrs + i)->setParentFolderName(folder_name);
-                (new_folder_ptrs + num_of_folder_ptrs + i)->setParentFolderPTR(this);
+                *(new_folder_ptr_ptrs + num_of_folder_ptrs + i) = folders[i];
+                (*(new_folder_ptr_ptrs + num_of_folder_ptrs + i))->setParentFolderName(folder_name);
+                (*(new_folder_ptr_ptrs + num_of_folder_ptrs + i))->setParentFolderPTR(this);
             }
 
-            delete[] folder_ptrs;
-            folder_ptrs = new_folder_ptrs;
+            delete[] folder_ptr_ptrs;
+            folder_ptr_ptrs = new_folder_ptr_ptrs;
             num_of_folder_ptrs = num_of_folder_ptrs + num_of_folders; 
         }
 
@@ -148,7 +148,7 @@
 
             for(int i = 0; i < num_of_folder_ptrs; i++)
             {
-                *(content_name_ptrs + num_of_file_ptrs + i) = (folder_ptrs + i)->getFolderName();
+                *(content_name_ptrs + num_of_file_ptrs + i) = (*(folder_ptr_ptrs + i))->getFolderName();
             }
 
             return content_name_ptrs; 
@@ -195,9 +195,9 @@
             return num_of_file_ptrs;
         }
 
-        folder* getFolderPTRs()
+        folder** getFolderPTR_PTRs()
         {
-            return folder_ptrs;
+            return folder_ptr_ptrs;
         }
 
         int getNumOfFolders()
@@ -235,14 +235,14 @@
 
             for(int i = 0; i < num_of_folders; i++)
             {
-                if((current_folder_ptr->getFolderPTRs() + i)->getFolderName() == folder_name)
+                if((*(current_folder_ptr->getFolderPTR_PTRs() + i))->getFolderName() == folder_name)
                 {
-                    return current_folder_ptr->getFolderPTRs() + i;
+                    return *(current_folder_ptr->getFolderPTR_PTRs() + i);
                 }
 
-                if(getFolderPTR(current_folder_ptr->getFolderPTRs() + i, folder_name))
+                if(getFolderPTR(*(current_folder_ptr->getFolderPTR_PTRs() + i), folder_name))
                 {
-                    return getFolderPTR(current_folder_ptr->getFolderPTRs() + i, folder_name);
+                    return getFolderPTR(*(current_folder_ptr->getFolderPTR_PTRs() + i), folder_name);
                 }
             }
 
@@ -275,9 +275,9 @@
     };
 
     folder base = folder("myFolder");
-    folder children[3] = {folder("[] child1"), folder("[] child2"), folder("[] child3")};
-    folder grand_children1[2] = {folder("[] grandchild1"), folder("[] grandchild2")};
-    folder grand_children2[2] = {folder("[] grandchildA"), folder("[] grandchildB")};
+    folder* children[3] = {new folder("[] child1"), new folder("[] child2"), new folder("[] child3")};
+    folder* grand_children1[2] = {new folder("[] grandchild1"), new folder("[] grandchild2")};
+    folder* grand_children2[2] = {new folder("[] grandchildA"), new folder("[] grandchildB")};
     file files[2] = {file("file1"), file("file2")};
     //LCD_Interface interface = LCD_Interface();
 

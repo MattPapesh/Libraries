@@ -248,8 +248,8 @@
         }
 
         public:
-    
-        folder getFolder(char* folder_name)
+
+        folder getFolder(char* folder_name) // set equal to the current_folder_selected
         {
             folder* folder_ptr_found = getFolderPTR(base_folder_ptr, folder_name);
 

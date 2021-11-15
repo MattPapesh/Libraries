@@ -1,349 +1,519 @@
-#include <Encoder.h>
-#include <LiquidCrystal.h>
-#include <String.h>
-#include <LCD_interface.h>
-#include "Arduino.h"
- 
-          LCD_INTERFACE::LCD_INTERFACE()
-          {     
-            display.begin(LCD_displayColoumns, LCD_displayRows);  
-          }
-
-          LCD_INTERFACE::~LCD_INTERFACE()
-          {
-            delete[] PTR_ofListOfFolderObjPTRs;
-            delete amountOfFolderObjPTRs; 
-            //Freeing any remaining memory that was allocated on the heap
-
-            PTR_ofListOfFolderObjPTRs = nullptr;
-            amountOfFolderObjPTRs = nullptr; 
-          }
-
-          void LCD_INTERFACE::currentFolder(char* tempListOfFolders[], short int tempSize, folder* tempCurrentFolderOpen)
-          {
-               delete[] listOfFoldersPTR; 
-
-               tempSize = tempSize + 1;
-
-               listOfFoldersPTR = new char*[tempSize];
-
-            for (int i = 1; i < tempSize; i++)
-            {
-                *(listOfFoldersPTR + i) = tempListOfFolders[i-1]; 
-            }
-            
-            *sizeOfListOfFoldersPTR = tempSize;
-
-            dial.encoderVal = tempSize; 
-            
-            if (currentFolderOpen->mainFolder)
-            {
-                 *(listOfFoldersPTR) = interfaceTitle; 
-            }
-            else
-            {
-                *(listOfFoldersPTR) = BACK;
-            }
-
-          }
-
-        void LCD_INTERFACE::begin(folder* tempMenuPTR)
-        {
-            currentFolderOpen = tempMenuPTR;
-
-            tempMenuPTR->mainFolder = true; 
-
-            *PTR_ofListOfFolderObjPTRs = tempMenuPTR; 
-            
-           currentFolder(tempMenuPTR->listOfFoldersPTR, *(tempMenuPTR->sizeOfListOfFoldersPTR), tempMenuPTR );      
-        }
-
-        bool LCD_INTERFACE::interfaceBlockade()
-        {
-            bool updateInterface;
-
-            if (dialVal < 0)
-            {
-                updateInterface = false;
-
-                dial.encoderVal = 0;
-            }
-            else if (dialVal == *sizeOfListOfFoldersPTR)
-            {
-                updateInterface = false;
-
-                dial.encoderVal = *sizeOfListOfFoldersPTR - 1; 
-            }
-            else
-            {
-                updateInterface = true; 
-            }
-
-            return updateInterface;    
-        }
-
-        short int LCD_INTERFACE::printOptionHorizontalLocation(char* tempFolder)
-        {
-            String tempFolderSTR = tempFolder;
-
-            short int tempHorizontalCursurPos;
-             // finds the horizontal position of the cursur to center the printed text
+#include "LCD_Interface.h"
+#include <stdio.h>
+#include <stdlib.h>
     
-            tempHorizontalCursurPos = (9 - (tempFolderSTR.length() /2) ); // equation centers option text
+    parameter::parameter(){}
+    parameter::parameter(char* parameter_name, double data)
+    :   parameter_name(parameter_name), data(data){}
 
-            return tempHorizontalCursurPos;
-        }
+    char* parameter::getParameterName()
+    {
+        return parameter_name;
+    }
 
-        void LCD_INTERFACE::printFolders(bool bottomRow, char* listOfFolders[])
-        { 
-             if (interfaceBlockade() )
-             {
-                  short int primaryOption, peripheralOption; 
+    double parameter::getData()
+    {
+        return data;
+    }
 
-                  if (!bottomRow)
-                  {
-                      if (dialVal == 0)
-                      {
-                          peripheralOption = 0;
-                      }
-                      else
-                      {
-                          peripheralOption = dialVal - 1; 
-                      }
-                
-                      primaryOption = dialVal;
-                  }
-                  else if (bottomRow)
-                  {
-                     peripheralOption = dialVal + 1;
-                     primaryOption = dialVal;
-                  }
+    void parameter::setParameterName(char* parameter_name)
+    {
+        this->parameter_name = parameter_name;
+    }
 
-                  display.setCursor(printOptionHorizontalLocation(listOfFolders[primaryOption] ), bottomRow); 
+    void parameter::setData(double data)
+    {
+        this->data = data; 
+    }
 
-                  display.print(listOfFolders[primaryOption]); 
+    file::file(){}
+    file::file(char* file_name)
+    :   file_name(file_name){}
 
-                  display.setCursor(printOptionHorizontalLocation(listOfFolders[peripheralOption]), (!bottomRow) );
-    
-                 if (primaryOption != peripheralOption)
-                 {
-                     display.print(listOfFolders[peripheralOption]);
-                 }
-            }
-        }
+    file::~file()
+    {
+        delete[] parameter_ptrs;
+        parameter_ptrs = nullptr;
+    }
 
-        void LCD_INTERFACE::printArrow()
+    void file::addParameter(char* parameter_name, double data)
+    {
+        parameter* new_parameter_ptrs = new parameter[num_of_parameter_ptrs + 1];
+
+        for(int i = 0; i < num_of_parameter_ptrs; i++)
         {
-            prevRow = row;
+            *(new_parameter_ptrs + i) = *(parameter_ptrs + i);
+        }
 
-            if (dialVal > prevDialVal)
-            {
-                  row = 0; //top row
-            }
-            else if (prevDialVal > dialVal)
-            {
-                 row = 1;  // bottom row
-            }
-    
-            if (dialVal != prevDialVal)
-            {
-                display.clear();
+        (new_parameter_ptrs + num_of_parameter_ptrs)->setParameterName(parameter_name);
+        (new_parameter_ptrs + num_of_parameter_ptrs)->setData(data);
 
-                display.setCursor(0, prevRow);
+        delete[] parameter_ptrs;
+        parameter_ptrs = new_parameter_ptrs;
+        num_of_parameter_ptrs++;
+    }
 
-                display.print(removeArrow);
-  
-                display.setCursor(0, row);
+    char* file::getFileName()
+    {
+        return file_name;
+    }
 
-                display.print(arrow);
-            }
-        }       
+    parameter* file::getParameterPTRs()
+    {
+        return parameter_ptrs;
+    }
 
-        void LCD_INTERFACE::interface()// runs the current menu (displays current parent folder)
-        { 
-            char* listOfFolders[*sizeOfListOfFoldersPTR];
+    int file::getNumOfParameters()
+    {
+        return num_of_parameter_ptrs;
+    }
 
-            for (int i = 0; i < *sizeOfListOfFoldersPTR; i++)
-            {
-                listOfFolders[i] = *(listOfFoldersPTR + *sizeOfListOfFoldersPTR - i - 1);
-            }
+    folder::folder(){}
+    folder::folder(char* folder_name)
+    :   folder_name(folder_name){}
 
-            prevDialVal = dialVal;
-            dialVal = dial.encoderValue();
+    folder::~folder()
+    {
+        delete[] file_ptr_ptrs, folder_ptr_ptrs;
+        file_ptr_ptrs = nullptr, folder_ptr_ptrs = nullptr;
+    }
 
-            currentFolderSelected = listOfFolders[dialVal]; 
-            
-            buttonPressed = dial.buttonPress(); 
+    void folder::addFolders(folder* folders[], int num_of_folders)
+    {
+        folder** new_folder_ptr_ptrs = new folder*[num_of_folder_ptrs + num_of_folders];
 
-            openFolder();
+        for(int i = 0; i < num_of_folder_ptrs; i++)
+        {
+            *(new_folder_ptr_ptrs + i) = *(folder_ptr_ptrs + i);
+        }
+
+        for(int i = 0; i < num_of_folders; i++)
+        {
+            *(new_folder_ptr_ptrs + num_of_folder_ptrs + i) = folders[i];
+            (*(new_folder_ptr_ptrs + num_of_folder_ptrs + i))->setParentFolderName(folder_name);
+            (*(new_folder_ptr_ptrs + num_of_folder_ptrs + i))->setParentFolderPTR(this);
+        }
+
+        delete[] folder_ptr_ptrs;
+        folder_ptr_ptrs = new_folder_ptr_ptrs;
+        num_of_folder_ptrs = num_of_folder_ptrs + num_of_folders;
+    }
+
+    void folder::addFiles(file* files[], int num_of_files)
+    {
+        file** new_file_ptr_ptrs = new file*[num_of_file_ptrs + num_of_files];
+
+        for(int i = 0; i < num_of_file_ptrs; i++)
+        {
+            *(new_file_ptr_ptrs + i) = *(file_ptr_ptrs + i);
+        }
+
+        for(int i = 0; i < num_of_files; i++)
+        {
+            *(new_file_ptr_ptrs + num_of_file_ptrs + i) = files[i];
+        }
+
+        delete[] file_ptr_ptrs;
+        file_ptr_ptrs = new_file_ptr_ptrs;
+        num_of_file_ptrs = num_of_file_ptrs + num_of_files;
+    }
+
+    folder* folder::getFolderPTR(int index)
+    {
+        if(index < num_of_folder_ptrs)
+        {
+            return *(folder_ptr_ptrs + index);
+        }
+
+        return nullptr;
+    }
+
+    // Methods for any info regarding this folder
+    char* folder::getFolderName()
+    {
+        return folder_name;
+    }
+
+    int folder::getNumOfFiles()
+    {
+        return num_of_file_ptrs;
+    } 
         
-            printArrow();
-            
-            printFolders(row, listOfFolders);
-            
-            delay(25);
+    int folder::getNumOfFolders()
+    {
+        return num_of_folder_ptrs;
+    }
+
+    // Methods for any info regarding this folder's parent folder
+    void folder::setParentFolderName(char* parent_folder_name)
+    {
+        this->parent_folder_name = parent_folder_name;
+    }
+
+    void folder::setParentFolderPTR(folder* parent_folder_ptr)
+    {
+        this->parent_folder_ptr = parent_folder_ptr;
+    }
+
+    folder* folder::getParentFolderPTR()
+    {
+        return parent_folder_ptr;
+    }
+
+    // Method regarding any info regarding this folder's child folders and files
+    file* folder::getFilePTR(int index)
+    {
+        if(index < num_of_file_ptrs)
+        {
+            return *(file_ptr_ptrs + index);
         }
 
-        void LCD_INTERFACE::updateFolders(folder* tempMainFolderPTR, folder* tempNewFolderPTR)
+        return nullptr;
+    }
+
+    char** folder::getContentNamePTRs(bool folders_before_files)
+    {
+        char** content_name_ptrs = new char*[num_of_folder_ptrs + num_of_file_ptrs];
+
+        if(folders_before_files)
         {
-           folder** tempPTR_ofListOfFolderObjPTRs = new folder*[*amountOfFolderObjPTRs];
-          
-           if (PTR_ofListOfFolderObjPTRs != nullptr)
+            for(int i = 0; i < num_of_folder_ptrs; i++)
             {
-                 for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
+                *(content_name_ptrs + i) = (*(folder_ptr_ptrs + i))->getFolderName();
+            }
+
+            for(int i = 0; i < num_of_file_ptrs; i++)
+            {
+                *(content_name_ptrs + num_of_folder_ptrs + i) = (*(file_ptr_ptrs + i))->getFileName();
+            }
+        }
+        else
+        {
+            for(int i = 0; i < num_of_file_ptrs; i++)
+            {
+                *(content_name_ptrs + i) = (*(file_ptr_ptrs + i))->getFileName();
+            }
+
+            for(int i = 0; i < num_of_folder_ptrs; i++)
+            {
+                *(content_name_ptrs + num_of_file_ptrs + i) = (*(folder_ptr_ptrs + i))->getFolderName();
+            }
+        }
+
+        return content_name_ptrs;
+    }
+
+    LCD_Interface::LCD_Interface()
+    {
+        display.begin(display_coloumns, display_rows);  
+    }
+
+    void LCD_Interface::begin(folder* base_folder_ptr)
+    {
+        this->base_folder_ptr = base_folder_ptr;
+        current_folder_open_ptr = base_folder_ptr;
+        dial.encoderVal = base_folder_ptr->getNumOfFolders() + base_folder_ptr->getNumOfFiles();
+        interface_title = base_folder_ptr->getFolderName();
+    }
+
+    folder* LCD_Interface::getFolderPTR(folder* current_folder_ptr, char* folder_name)
+    {
+        int folder_index = 0;
+        int num_of_folders = current_folder_ptr->getNumOfFolders();
+
+        for(int i = 0; i < num_of_folders; i++)
+        {
+            if(current_folder_ptr->getFolderPTR(i)->getFolderName() == folder_name)
+            {
+                return current_folder_ptr->getFolderPTR(i);
+            }
+
+            if(getFolderPTR(current_folder_ptr->getFolderPTR(i), folder_name))
+            {
+                return getFolderPTR(current_folder_ptr->getFolderPTR(i), folder_name);
+            }
+        }
+
+        return nullptr;
+    }
+
+    folder* LCD_Interface::getFolderPTR(char* folder_name) // set equal to the current_folder_selected
+    {
+        folder* folder_ptr_found = getFolderPTR(base_folder_ptr, folder_name);
+
+        if(base_folder_ptr->getFolderName() == folder_name)
+        {
+            return base_folder_ptr;
+        }
+        else if(folder_ptr_found != nullptr)
+        {
+            return folder_ptr_found;
+        }
+        
+        return nullptr;
+    }
+
+    bool LCD_Interface::interfaceBlockade()
+    {
+        if (dial_val < 0)
+        {
+            dial.encoderVal = 0;
+            return false;
+        }
+        else if (dial_val >= current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles() + 1)
+        {
+            dial.encoderVal = current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles(); 
+            return false;
+        }
+
+        return true;    
+    }
+    
+    // finds the horizontal position of the cursur to center the printed text equation centers option text
+    int LCD_Interface::centerTextDisplacement(char* text)
+    {   
+        String text_str = text;
+        return (9 - (text_str.length() / 2) ); 
+    }
+
+    int LCD_Interface::centerTextDisplacement(String text)
+    {   
+        return (9 - (text.length() / 2) ); 
+    }
+
+    void LCD_Interface::printArrow()
+    {
+        prev_row = row;
+
+        if (dial_val > prev_dial_val)
+        {
+            row = 0; //top row
+        }
+        else if (prev_dial_val > dial_val)
+        {
+            row = 1;  // bottom row
+        }
+    
+        if (dial_val != prev_dial_val)
+        {
+            display.clear();
+            display.setCursor(0, prev_row);
+            display.print(remove_arrow);
+            display.setCursor(0, row);
+            display.print(arrow);
+        }
+    }     
+
+    void LCD_Interface::openFolder()
+    {
+        if (button_pressed_once && (getFolderPTR(current_content_selected) != nullptr) && (getFolderPTR(current_content_selected)->getFolderName() != current_folder_open_ptr->getFolderName()))
+        {
+            display.clear();
+            current_folder_open_ptr = getFolderPTR(current_content_selected);
+            dial_val = getFolderPTR(current_content_selected)->getNumOfFolders() +  getFolderPTR(current_content_selected)->getNumOfFiles() + 1;
+            prev_dial_val = 0;
+        } 
+        else if(button_pressed_once && current_content_selected == BACK)
+        {
+            display.clear();
+            current_folder_open_ptr = current_folder_open_ptr->getParentFolderPTR();
+            dial_val = getFolderPTR(current_content_selected)->getNumOfFolders() +  getFolderPTR(current_content_selected)->getNumOfFiles() + 1;
+            prev_dial_val = 0;
+        }
+            
+         button_pressed_once = false; 
+    }  
+
+    void LCD_Interface::preparePrimaryContent()
+    {
+        // number of folders and files, plus the BACK keyword
+        int num_of_contents = current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles() + 1;
+        char* contents[num_of_contents] = {};
+        char** content_ptrs = current_folder_open_ptr->getContentNamePTRs(folders_before_functions);      
+            
+        if(current_folder_open_ptr == base_folder_ptr)
+        {
+           contents[num_of_contents - 1] = interface_title;
+        }
+        else
+        {
+            contents[num_of_contents - 1] = BACK;
+        }     
+
+        for(int i = 0; i < num_of_contents - 1; i++)
+        {
+            contents[i] = *(content_ptrs + num_of_contents - i - 2);      
+        }
+            
+        delete[] content_ptrs; 
+        current_content_selected = contents[dial_val]; 
+        printArrow();
+        printPrimaryContent(row, contents);
+    }
+        
+    void LCD_Interface::printPrimaryContent(bool bottom_row, char* current_content[])
+    { 
+        if (interfaceBlockade())
+        {
+            int primary_option, peripheral_option; 
+
+            if (!bottom_row)
+            {
+                if (dial_val == 0)
                 {
-                    *(tempPTR_ofListOfFolderObjPTRs + i) = *(PTR_ofListOfFolderObjPTRs + i);
+                    peripheral_option = 0;
+                }
+                else
+                {
+                    peripheral_option = dial_val - 1; 
+                }
+            
+                primary_option = dial_val;
+            }
+            else if (bottom_row)
+            {
+                peripheral_option = dial_val + 1;
+                primary_option = dial_val;
+            }
+
+            display.setCursor(centerTextDisplacement(current_content[primary_option]), bottom_row); 
+            display.print(current_content[primary_option]); 
+            display.setCursor(centerTextDisplacement(current_content[peripheral_option]), !bottom_row);
+    
+            if (primary_option != peripheral_option)
+            {
+                display.print(current_content[peripheral_option]);
+            }
+        }
+    }
+
+    void LCD_Interface::openFile()
+    {       
+        for(int i = 0; i < current_folder_open_ptr->getNumOfFiles(); i++)
+        {
+            if(current_content_selected == current_folder_open_ptr->getFilePTR(i)->getFileName())
+            {
+                current_file_open_ptr = current_folder_open_ptr->getFilePTR(i);
+            }
+        }
+    }
+
+    void LCD_Interface::prepareSecondaryContent()
+    {
+       static int current_parameter_index = 0;
+
+       if(button_pressed_once)
+       {
+           current_parameter_index++;  
+       } 
+       
+       if(current_parameter_index >= current_file_open_ptr->getNumOfParameters() || nav_interface == true)
+       {
+           current_parameter_index = 0;
+       }
+
+       if(dial_val > prev_dial_val)
+       {
+           (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->setData
+           (
+               (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->getData() + parameter_resolution
+           );
+       }
+       else if(dial_val < prev_dial_val)
+       {
+           (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->setData
+           (
+               (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->getData() - parameter_resolution
+           );
+       }
+
+       printSecondaryContent(*(current_file_open_ptr->getParameterPTRs() + current_parameter_index));
+    }
+
+    void LCD_Interface::printSecondaryContent(parameter current_parameter)
+    {
+        if(current_file_open_ptr != nullptr)
+        {
+            String content = (String)current_parameter.getParameterName() + (String)": " + (String)current_parameter.getData();
+
+            display.setCursor(centerTextDisplacement(current_file_open_ptr->getFileName()), 0);
+            display.print(current_file_open_ptr->getFileName());
+            display.setCursor(centerTextDisplacement(content), 1);
+            display.print(content);
+        }
+    }
+
+    void LCD_Interface::setParameterResolution(double parameter_resolution)
+    {
+        this->parameter_resolution = parameter_resolution;
+    }
+
+    // runs the current menu (displays current parent folder)
+    void LCD_Interface::interface()
+    {         
+        prev_dial_val = dial_val;
+        dial_val = dial.encoderValue();
+        button_pressed_once = dial.buttonPress(); 
+
+        if(button_pressed_once)
+        {
+            delay(BUTTON_COOL_DOWN);
+            display.clear();
+
+            for(int i = 0; i < 500; i++)
+            {
+                if(dial.buttonPress())
+                {
+                    button_pressed_once = false;
+                    nav_interface = !nav_interface;
+                    delay(BUTTON_COOL_DOWN);
+                    break;
                 }
 
-                delete[] PTR_ofListOfFolderObjPTRs;
+                delay(1);
             }
-           
-           *amountOfFolderObjPTRs = *amountOfFolderObjPTRs + 1;
-
-           PTR_ofListOfFolderObjPTRs = new folder*[*amountOfFolderObjPTRs]; 
-
-           for (short int i = 0; i < *amountOfFolderObjPTRs - 1; i++)
-           {
-               *(PTR_ofListOfFolderObjPTRs + i) = *(tempPTR_ofListOfFolderObjPTRs + i);
-           }
-
-           delete[]  tempPTR_ofListOfFolderObjPTRs;
-
-           *(PTR_ofListOfFolderObjPTRs + *amountOfFolderObjPTRs - 1) = tempNewFolderPTR; 
         }
 
-        void LCD_INTERFACE::updateDisplay(bool openFolder)
+        primaryInterface(nav_interface);
+        secondaryInterface(!nav_interface);
+        delay(PERIODIC_DELAY);
+    }
+
+    // used to navigate folder and to run files
+    void LCD_Interface::primaryInterface(bool active)
+    {
+        if(active)
         {
-            if (openFolder)
-            { 
-                for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
-                {
-                    if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName == currentFolderSelected)
-                    { 
-                        currentFolderOpen =  *(PTR_ofListOfFolderObjPTRs + i) ;
-                        
-                        currentFolder(currentFolderOpen->listOfFoldersPTR, *(currentFolderOpen->sizeOfListOfFoldersPTR), currentFolderOpen);
-                    }
-                }
-            }
-            else if (!openFolder)
+            current_file_open_ptr = nullptr;
+            openFolder();
+            preparePrimaryContent();
+        } 
+    }
+
+    // used to interfact with files; updating file parameters
+    void LCD_Interface::secondaryInterface(bool active)
+    {
+        if(active)
+        {
+            openFile();
+
+            if(current_file_open_ptr != nullptr && current_file_open_ptr->getParameterPTRs() != nullptr)
             {
-                for (short int i = 0; i < *amountOfFolderObjPTRs; i++)
-                {
-                    if ( (*(PTR_ofListOfFolderObjPTRs + i) )->folderName ==  currentFolderOpen->parentFolder)
-                    {
-                        currentFolderOpen = *(PTR_ofListOfFolderObjPTRs + i);
-                        
-                        currentFolder(currentFolderOpen->listOfFoldersPTR, *(currentFolderOpen->sizeOfListOfFoldersPTR), currentFolderOpen);
-                    }
-                }
+                prepareSecondaryContent();
+            }
+            else
+            {
+                nav_interface = true;
             }
         }
+    }
 
-        void LCD_INTERFACE::openFolder()
+    bool LCD_Interface::getFileActive(char* folder_name, char* file_name)
+    {
+        folder folder = *getFolderPTR(folder_name);
+
+        for(int i = 0; i < folder.getNumOfFiles(); i++)
         {
-            bool enter;
-
-            if (buttonPressed)
-            {
-                delay(buttonDelayInMillis); 
-                
-                  if (currentFolderSelected == BACK)
-                  {  
-                     enter = false;
-                  }
-                  else
-                  {
-                    enter = true; 
-                 }
-                
-                updateDisplay(enter);
-               
-            } buttonPressed = false; 
-        }
-
-        void LCD_INTERFACE::includeFolder(folder* tempParentFolderPTR, folder* tempChildFolderPTR, bool tempFoldersBeforeFunctions)
-        {
-            foldersBeforeFunctions = tempFoldersBeforeFunctions; 
-
-            updateFolders(nullptr, tempChildFolderPTR);
             
-            char* tempListOfFolders[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)];// creates clone of parent folder's options on the stack
-
-            for (short int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
-            {
-                tempListOfFolders[i] = *(tempParentFolderPTR->listOfFoldersPTR + i);//makes clone identical to parent folder's list of options
-            }
-
-            *(tempParentFolderPTR->sizeOfListOfFoldersPTR) = *(tempParentFolderPTR->sizeOfListOfFoldersPTR) + 1; // size of list increments by 1
-            
-            delete[] tempParentFolderPTR->listOfFoldersPTR;  // original parent folder's options are deleted (array deleted) // issue
-
-            tempParentFolderPTR->listOfFoldersPTR = new char*[*(tempParentFolderPTR->sizeOfListOfFoldersPTR)]; // new list of options
-            //is made for the parent folder based on the new size
-
-            for (short int i = 0; i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR); i++)
-            {
-                if(foldersBeforeFunctions)
-                {
-                    if(i == 0)
-                     {
-                            *(tempParentFolderPTR->listOfFoldersPTR ) = tempChildFolderPTR->folderName;
-                     }
-                     else if(i < *(tempParentFolderPTR->sizeOfListOfFoldersPTR))
-                     {
-                            *(tempParentFolderPTR->listOfFoldersPTR + i) = tempListOfFolders[i-1];
-                     }
-                }
-                else if(!foldersBeforeFunctions)
-                {
-                    if (i <= *(tempParentFolderPTR->sizeOfListOfFoldersPTR) - 2)
-                    {
-                        *(tempParentFolderPTR->listOfFoldersPTR + i) = tempListOfFolders[i]; // original list is copied to the new list, leaving
-                         //the new index empty.
-                    }
-                    else if (i == *(tempParentFolderPTR->sizeOfListOfFoldersPTR) - 1)
-                    {        
-                        *(tempParentFolderPTR->listOfFoldersPTR + i ) = tempChildFolderPTR->folderName; //issue
-                        //the new index is assigned in option with the name of the child folder. 
-                    }
-                }
-            }
-            
-             tempChildFolderPTR->parentFolder = tempParentFolderPTR->folderName; // the parent folder name of the child folder is named after the parent
-           // we are not interested in the parent's parent, or the child's child, but strictly the relationship between the current child and the current parent. 
         }
-
-        folder::~folder()
-        {
-            delete[] listOfFoldersPTR;
-            delete sizeOfListOfFoldersPTR; //any remaining allocated memory on the heap is freed. 
-
-            listOfFoldersPTR = nullptr;
-            sizeOfListOfFoldersPTR = nullptr; 
-        }
-
-        void folder::createFolder(char* tempListOfFolders[], short int tempSizeOfListOfFolders)
-        {
-            if (listOfFoldersPTR != nullptr)
-            {
-                delete[] listOfFoldersPTR;
-            }
-
-            if (sizeOfListOfFoldersPTR != nullptr)
-            {
-                delete sizeOfListOfFoldersPTR;
-            }
-            // Sense memory is constantly allocated on the heap, anything already
-            //allocated needs to be freed before more memory is allocated. 
-
-            listOfFoldersPTR = new char*[tempSizeOfListOfFolders];
-            sizeOfListOfFoldersPTR = new short int; // pointers allocate memory inside of the method in case the std::char* array's size changes.
-
-            *sizeOfListOfFoldersPTR = tempSizeOfListOfFolders;
-            
-            for (short int i = 0; i < tempSizeOfListOfFolders; i++)
-            {
-                *(listOfFoldersPTR + i) = tempListOfFolders[i];
-            }
-        }
+    }

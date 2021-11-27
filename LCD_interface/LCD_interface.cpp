@@ -53,6 +53,14 @@
         num_of_parameter_ptrs++;
     }
 
+    void file::setFileActive(bool is_active)
+    {
+        this->is_active = is_active;
+    
+    bool file::getFileActive()
+    {
+        return is_active;
+    }
     char* file::getFileName()
     {
         return file_name;
@@ -296,17 +304,23 @@
     
         if (dial_val != prev_dial_val)
         {
+            refresh_arrow = true;
+        }
+
+        if(refresh_arrow)
+        {
             display.clear();
             display.setCursor(0, prev_row);
             display.print(remove_arrow);
             display.setCursor(0, row);
             display.print(arrow);
+            refresh_arrow = false;
         }
     }     
 
     void LCD_Interface::openFolder()
     {
-        if (button_pressed_once && (getFolderPTR(current_content_selected) != nullptr) && (getFolderPTR(current_content_selected)->getFolderName() != current_folder_open_ptr->getFolderName()))
+        if (button_pressed_once && (getFolderPTR(current_content_selected) != nullptr) && current_content_selected != current_folder_open_ptr->getFolderName())
         {
             display.clear();
             current_folder_open_ptr = getFolderPTR(current_content_selected);
@@ -320,8 +334,6 @@
             dial_val = getFolderPTR(current_content_selected)->getNumOfFolders() +  getFolderPTR(current_content_selected)->getNumOfFiles() + 1;
             prev_dial_val = 0;
         }
-            
-         button_pressed_once = false; 
     }  
 
     void LCD_Interface::preparePrimaryContent()
@@ -347,13 +359,13 @@
             
         delete[] content_ptrs; 
         current_content_selected = contents[dial_val]; 
+        printPrimaryContent(row, contents, num_of_contents); 
         printArrow();
-        printPrimaryContent(row, contents);
     }
         
-    void LCD_Interface::printPrimaryContent(bool bottom_row, char* current_content[])
+    void LCD_Interface::printPrimaryContent(bool bottom_row, char* current_content[], int num_of_contents)
     { 
-        if (interfaceBlockade())
+        if(interfaceBlockade())
         {
             int primary_option, peripheral_option; 
 
@@ -370,17 +382,25 @@
             
                 primary_option = dial_val;
             }
-            else if (bottom_row)
+            else if(bottom_row)
             {
-                peripheral_option = dial_val + 1;
+                if(dial_val >= num_of_contents - 1)
+                {
+                    peripheral_option = dial_val;
+                }
+                else
+                {
+                    peripheral_option = dial_val + 1;
+                }
+
                 primary_option = dial_val;
             }
 
             display.setCursor(centerTextDisplacement(current_content[primary_option]), bottom_row); 
             display.print(current_content[primary_option]); 
             display.setCursor(centerTextDisplacement(current_content[peripheral_option]), !bottom_row);
-    
-            if (primary_option != peripheral_option)
+
+            if(current_content[primary_option] != current_content[peripheral_option])
             {
                 display.print(current_content[peripheral_option]);
             }
@@ -459,6 +479,7 @@
         {
             delay(BUTTON_COOL_DOWN);
             display.clear();
+            refresh_arrow = true;
 
             for(int i = 0; i < 500; i++)
             {
@@ -477,6 +498,7 @@
         primaryInterface(nav_interface);
         secondaryInterface(!nav_interface);
         delay(PERIODIC_DELAY);
+        button_pressed_once = false; 
     }
 
     // used to navigate folder and to run files
@@ -487,6 +509,14 @@
             current_file_open_ptr = nullptr;
             openFolder();
             preparePrimaryContent();
+
+            for(int i = 0; i < current_folder_open_ptr->getNumOfFiles(); i++)
+            {
+                if(button_pressed_once && current_folder_open_ptr->getFilePTR(i)->getFileName() == current_content_selected)
+                {
+                    current_folder_open_ptr->getFilePTR(i)->setFileActive(!(current_folder_open_ptr->getFilePTR(i)->getFileActive()));
+                }
+            }
         } 
     }
 
@@ -503,6 +533,7 @@
             }
             else
             {
+                refresh_arrow = true;
                 nav_interface = true;
             }
         }
@@ -510,10 +541,37 @@
 
     bool LCD_Interface::getFileActive(char* folder_name, char* file_name)
     {
-        folder folder = *getFolderPTR(folder_name);
+        folder* folder_ptr = getFolderPTR(folder_name);
 
-        for(int i = 0; i < folder.getNumOfFiles(); i++)
+        for(int i = 0; i < folder_ptr->getNumOfFiles(); i++)
         {
-            
+            if(folder_ptr->getFilePTR(i)->getFileName() == file_name)
+            {
+                return folder_ptr->getFilePTR(i)->getFileActive();
+            }
+        }
+
+        return false; 
+    }
+
+    double LCD_Interface::getFileParameterData(char* folder_name, char* file_name, char* parameter_name)
+    {
+        folder* folder_ptr = getFolderPTR(folder_name);
+        file* file_ptr = nullptr;
+
+        for(int i = 0; i < folder_ptr->getNumOfFiles(); i++)
+        {
+            if(folder_ptr->getFilePTR(i)->getFileName() == file_name)
+            {
+                file_ptr = folder_ptr->getFilePTR(i);
+            }
+        }
+
+        for(int i = 0; i < file_ptr->getNumOfParameters(); i++)
+        {
+            if((file_ptr->getParameterPTRs() + i)->getParameterName() == parameter_name)
+            {
+                return (file_ptr->getParameterPTRs() + i)->getData();
+            }
         }
     }

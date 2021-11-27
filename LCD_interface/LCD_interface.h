@@ -31,6 +31,7 @@
         char* file_name = "";
         parameter* parameter_ptrs = nullptr;
         int num_of_parameter_ptrs = 0;
+        bool is_active = false;
 
         public:
 
@@ -39,6 +40,8 @@
         ~file();
         void addParameter(char* parameter_name, double data);
         char* getFileName();
+        void setFileActive(bool is_active);
+        bool getFileActive(); 
         parameter* getParameterPTRs();
         int getNumOfParameters();
     };
@@ -82,20 +85,21 @@
         file* current_file_open_ptr = nullptr;
         char* current_content_selected = "";
 
-        folder* getFolderPTR(folder* current_folder_ptr, char* folder_name);public:
+        folder* getFolderPTR(folder* current_folder_ptr, char* folder_name);
         folder* getFolderPTR(char* folder_name); // set equal to the current_folder_selected
 
         int row, prev_row;
         bool folders_before_functions = true; 
-        int const PERIODIC_DELAY = 25, BUTTON_COOL_DOWN = 200;; 
+        int const PERIODIC_DELAY = 25, BUTTON_COOL_DOWN = 200; 
         char* arrow = "->";
         char* remove_arrow = "  ";
+        bool refresh_arrow = true; 
         bool button_pressed_once;
         bool nav_interface = true; 
         char* interface_title = "";
         char* BACK = "< BACK >";
         int prev_dial_val, dial_val;
-        int parameter_resolution = 1;  
+        double parameter_resolution = 1;  
         
         int select_pin = A5, enable_pin = A4, digital_pin_0 = A2, digital_pin_1 = 7, digital_pin_2 = 8, digital_pin_3 = A3,
         display_coloumns = 16, display_rows = 2;
@@ -108,7 +112,7 @@
         bool interfaceBlockade();
         int centerTextDisplacement(char* text);
         int centerTextDisplacement(String text);
-        void printPrimaryContent(bool top_row, char* current_content[]);
+        void printPrimaryContent(bool top_row, char* current_content[], int num_of_contents);
         void preparePrimaryContent();
         void printSecondaryContent(parameter current_parameter);
         void prepareSecondaryContent();

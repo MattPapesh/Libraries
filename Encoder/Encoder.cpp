@@ -61,3 +61,8 @@
 
      return buttonPressed;
   }
+
+  void ENCODER::setEncoderValue(int value)
+  {
+    encoderVal = value;
+  }

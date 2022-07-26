@@ -4,11 +4,11 @@
             "name": "Win32",
             "includePath": [
                 "C:\\Program Files (x86)\\Arduino\\tools\\**",
-                "C:\\Users\\Matthew\\Documents\\GitHub\\RGB-Lyric-Note\\**",
+                "C:\\Users\\papes\\OneDrive\\Documents\\GitHub\\RGB-Lyric-Note\\**",
                 "C:\\Program Files (x86)\\Arduino\\libraries\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\tools\\**",
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\**",
-                "C:\\Users\\Matthew\\Documents\\Arduino\\libraries\\**"
+                "C:\\Users\\papes\\OneDrive\\Documents\\Arduino\\libraries\\**"
             ],
             "forcedInclude": [
                 "C:\\Program Files (x86)\\Arduino\\hardware\\arduino\\avr\\cores\\arduino\\Arduino.h"
@@ -17,7 +17,7 @@
                 "USBCON"
             ],
             "intelliSenseMode": "msvc-x64",
-            "compilerPath": "C:\\Program Files\\mingw-w64\\x86_64-8.1.0-posix-seh-rt_v6-rev0\\mingw64\\bin\\gcc.exe",
+            "compilerPath": "C:\\Program Files\\mingw64\\bin\\gcc.exe",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14"
         }

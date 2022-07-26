@@ -8,7 +8,6 @@ class ENCODER
   private:
 
   int valueA, valueB, encoderVal, prevButtonPressed;
-
   bool execute, buttonPressed;
 
   public:
@@ -17,8 +16,8 @@ class ENCODER
 
   ENCODER(int tempPinA, int tempPinB, int tempDigitalPin);
 
+  void setEncoderValue(int value);
   int encoderValue();
-
   bool buttonPress();
 
 };

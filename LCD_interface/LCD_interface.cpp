@@ -56,6 +56,7 @@
     void file::setFileActive(bool is_active)
     {
         this->is_active = is_active;
+    }
     
     bool file::getFileActive()
     {
@@ -220,7 +221,7 @@
     {
         this->base_folder_ptr = base_folder_ptr;
         current_folder_open_ptr = base_folder_ptr;
-        dial.encoderVal = base_folder_ptr->getNumOfFolders() + base_folder_ptr->getNumOfFiles();
+        dial.setEncoderValue(base_folder_ptr->getNumOfFolders() + base_folder_ptr->getNumOfFiles());
         interface_title = base_folder_ptr->getFolderName();
     }
 
@@ -265,12 +266,12 @@
     {
         if (dial_val < 0)
         {
-            dial.encoderVal = 0;
+            dial.setEncoderValue(0);
             return false;
         }
         else if (dial_val >= current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles() + 1)
         {
-            dial.encoderVal = current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles(); 
+            dial.setEncoderValue(current_folder_open_ptr->getNumOfFolders() + current_folder_open_ptr->getNumOfFiles()); 
             return false;
         }
 
@@ -369,32 +370,24 @@
         {
             int primary_option, peripheral_option; 
 
-            if (!bottom_row)
+            if(!bottom_row && dial_val == 0)
             {
-                if (dial_val == 0)
-                {
-                    peripheral_option = 0;
-                }
-                else
-                {
-                    peripheral_option = dial_val - 1; 
-                }
-            
-                primary_option = dial_val;
+                peripheral_option = 0;
+            }
+            else if(!bottom_row)
+            {
+                peripheral_option = dial_val - 1; 
+            }
+            else if(bottom_row && dial_val >= num_of_contents - 1)
+            {
+                peripheral_option = dial_val;
             }
             else if(bottom_row)
             {
-                if(dial_val >= num_of_contents - 1)
-                {
-                    peripheral_option = dial_val;
-                }
-                else
-                {
-                    peripheral_option = dial_val + 1;
-                }
-
-                primary_option = dial_val;
+                peripheral_option = dial_val + 1;
             }
+
+            primary_option = dial_val;
 
             display.setCursor(centerTextDisplacement(current_content[primary_option]), bottom_row); 
             display.print(current_content[primary_option]); 
@@ -574,4 +567,6 @@
                 return (file_ptr->getParameterPTRs() + i)->getData();
             }
         }
+
+        return 0;
     }

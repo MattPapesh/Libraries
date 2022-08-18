@@ -38,15 +38,14 @@
 
     void file::addParameter(char* parameter_name, double data)
     {
-        parameter* new_parameter_ptrs = new parameter[num_of_parameter_ptrs + 1];
+        parameter** new_parameter_ptrs = new parameter*[num_of_parameter_ptrs + 1];
 
-        for(int i = 0; i < num_of_parameter_ptrs; i++)
+        for(int i = 0; i < num_of_parameter_ptrs && parameter_ptrs != nullptr; i++)
         {
             *(new_parameter_ptrs + i) = *(parameter_ptrs + i);
         }
 
-        (new_parameter_ptrs + num_of_parameter_ptrs)->setParameterName(parameter_name);
-        (new_parameter_ptrs + num_of_parameter_ptrs)->setData(data);
+        *(new_parameter_ptrs + num_of_parameter_ptrs) = new parameter(parameter_name, data);
 
         delete[] parameter_ptrs;
         parameter_ptrs = new_parameter_ptrs;
@@ -67,9 +66,9 @@
         return file_name;
     }
 
-    parameter* file::getParameterPTRs()
+    parameter* file::getParameterPTR(int index)
     {
-        return parameter_ptrs;
+        return *(parameter_ptrs + index);
     }
 
     int file::getNumOfParameters()
@@ -427,20 +426,20 @@
 
        if(dial_val > prev_dial_val)
        {
-           (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->setData
+           (current_file_open_ptr->getParameterPTR(current_parameter_index))->setData
            (
-               (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->getData() + parameter_resolution
+               (current_file_open_ptr->getParameterPTR(current_parameter_index))->getData() + parameter_resolution
            );
        }
        else if(dial_val < prev_dial_val)
        {
-           (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->setData
+           (current_file_open_ptr->getParameterPTR(current_parameter_index))->setData
            (
-               (current_file_open_ptr->getParameterPTRs() + current_parameter_index)->getData() - parameter_resolution
+               (current_file_open_ptr->getParameterPTR(current_parameter_index))->getData() - parameter_resolution
            );
        }
 
-       printSecondaryContent(*(current_file_open_ptr->getParameterPTRs() + current_parameter_index));
+       printSecondaryContent(*(current_file_open_ptr->getParameterPTR(current_parameter_index)));
     }
 
     void LCD_Interface::printSecondaryContent(parameter current_parameter)
@@ -462,7 +461,7 @@
     }
 
     // runs the current menu (displays current parent folder)
-    void LCD_Interface::interface()
+    void LCD_Interface::run()
     {         
         prev_dial_val = dial_val;
         dial_val = dial.encoderValue();
@@ -520,7 +519,7 @@
         {
             openFile();
 
-            if(current_file_open_ptr != nullptr && current_file_open_ptr->getParameterPTRs() != nullptr)
+            if(current_file_open_ptr != nullptr && current_file_open_ptr->getParameterPTR(0) != nullptr)
             {
                 prepareSecondaryContent();
             }
@@ -562,9 +561,9 @@
 
         for(int i = 0; i < file_ptr->getNumOfParameters(); i++)
         {
-            if((file_ptr->getParameterPTRs() + i)->getParameterName() == parameter_name)
+            if((file_ptr->getParameterPTR(i))->getParameterName() == parameter_name)
             {
-                return (file_ptr->getParameterPTRs() + i)->getData();
+                return (file_ptr->getParameterPTR(i))->getData();
             }
         }
 

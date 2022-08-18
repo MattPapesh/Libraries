@@ -29,7 +29,7 @@
         private:
 
         char* file_name = "";
-        parameter* parameter_ptrs = nullptr;
+        parameter** parameter_ptrs = nullptr;
         int num_of_parameter_ptrs = 0;
         bool is_active = false;
 
@@ -42,7 +42,7 @@
         char* getFileName();
         void setFileActive(bool is_active);
         bool getFileActive(); 
-        parameter* getParameterPTRs();
+        parameter* getParameterPTR(int index);
         int getNumOfParameters();
     };
 
@@ -126,7 +126,7 @@
         public:
 
         LCD_Interface();
-        void interface();
+        void run();
         void begin(folder* base_folder_ptr);
         void setParameterResolution(double parameter_resolution);
         bool getFileActive(char* folder_name, char* file_name);
